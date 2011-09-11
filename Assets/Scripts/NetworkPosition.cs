@@ -80,7 +80,9 @@ public class NetworkPosition : NetworkState
             var cmd = net_actor.owner.cmd_queue.Peek();
             last_cmd_id = cmd.commandid;
 			rigidbody.MoveRotation(rigidbody.rotation * UserInput.KeyStateToRotation(cmd.keystate));
-			rigidbody.MovePosition(transform.TransformPoint(UserInput.KeyStateToVelocity(cmd.keystate)));
+			Vector3 pos = transform.TransformPoint(UserInput.KeyStateToVelocity(cmd.keystate));
+			pos.y = 1.0f;
+			rigidbody.MovePosition(pos);
         }
     }
     public override void NetworkFixedUpdateClient()
@@ -113,18 +115,7 @@ public class NetworkPosition : NetworkState
         
 			rot_to *= UserInput.KeyStateToRotation(UserInput.cmd.keystate);
             pos_to += rot_to * UserInput.KeyStateToVelocity(UserInput.cmd.keystate);
-			
-			var t = (Time.time - interp_start) / NetworkPeer.TICK_TIME;
-			rigidbody.MoveRotation(Quaternion.Slerp(rot_from, rot_to, Mathf.Min(t, 1.0f)));
-			rigidbody.MovePosition(Vector3.Lerp(pos_from, pos_to, Mathf.Min(t, 1.0f)));
         }
-		else 
-		{
-			if (!SetPosition())
-            {
-                // If we failed to set position, we need to extrapolate...
-            }
-		}
     }
 
     public override void Init()
@@ -151,6 +142,7 @@ public class NetworkPosition : NetworkState
                 }
 				
 				rigidbody.MoveRotation(Quaternion.Slerp(lhs.rot, rhs.rot, t));
+				rhs.pos.y = 1.0f;
                 rigidbody.MovePosition(Vector3.Lerp(lhs.pos, rhs.pos, t));
                 return true;
             }
@@ -166,7 +158,7 @@ public class NetworkPosition : NetworkState
 
     public override void NetworkUpdateClient()
     {
-        /*if (NetworkPeer.is_client)
+        if (NetworkPeer.is_client)
         {
             if (!net_actor.is_owner)
             {
@@ -177,10 +169,11 @@ public class NetworkPosition : NetworkState
             }
             else
             {
-                var t = (Time.time - interp_start) / NetworkPeer.TICK_TIME;
+				var t = (Time.time - interp_start) / NetworkPeer.TICK_TIME;
 				rigidbody.MoveRotation(Quaternion.Slerp(rot_from, rot_to, Mathf.Min(t, 1.0f)));
+				pos_to.y = 1.0f;
 				rigidbody.MovePosition(Vector3.Lerp(pos_from, pos_to, Mathf.Min(t, 1.0f)));
             }
-        }*/
+        }
     }
 }
