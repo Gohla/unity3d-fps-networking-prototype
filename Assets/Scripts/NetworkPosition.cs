@@ -79,10 +79,8 @@ public class NetworkPosition : NetworkState
         {
             var cmd = net_actor.owner.cmd_queue.Peek();
             last_cmd_id = cmd.commandid;
-			rigidbody.MoveRotation(rigidbody.rotation * UserInput.KeyStateToRotation(cmd.keystate));
-			Vector3 pos = rigidbody.position + (rigidbody.rotation * UserInput.KeyStateToVelocity(cmd.keystate));
-			pos.y = 1.0f;
-			rigidbody.MovePosition(pos);
+			transform.rotation *= UserInput.KeyStateToRotation(cmd.keystate);
+            transform.Translate(UserInput.KeyStateToVelocity(cmd.keystate));
         }
     }
     public override void NetworkFixedUpdateClient()
@@ -141,9 +139,8 @@ public class NetworkPosition : NetworkState
                     t = (float)((time - lhs.timestamp) / length);
                 }
 				
-				rigidbody.MoveRotation(Quaternion.Slerp(lhs.rot, rhs.rot, t));
-				rhs.pos.y = 1.0f;
-                rigidbody.MovePosition(Vector3.Lerp(lhs.pos, rhs.pos, t));
+				transform.rotation = Quaternion.Slerp(lhs.rot, rhs.rot, t);
+                transform.position = Vector3.Lerp(lhs.pos, rhs.pos, t);
                 return true;
             }
         }
@@ -165,14 +162,14 @@ public class NetworkPosition : NetworkState
                 if (!SetPosition())
                 {
                     // If we failed to set position, we need to extrapolate...
+					Debug.LogWarning("Need extrapolation", this);
                 }
             }
             else
             {
 				var t = (Time.time - interp_start) / NetworkPeer.TICK_TIME;
-				rigidbody.MoveRotation(Quaternion.Slerp(rot_from, rot_to, Mathf.Min(t, 1.0f)));
-				pos_to.y = 1.0f;
-				rigidbody.MovePosition(Vector3.Lerp(pos_from, pos_to, Mathf.Min(t, 1.0f)));
+				transform.rotation = Quaternion.Slerp(rot_from, rot_to, t);
+				transform.position = Vector3.Lerp(pos_from, pos_to, t);
             }
         }
     }
