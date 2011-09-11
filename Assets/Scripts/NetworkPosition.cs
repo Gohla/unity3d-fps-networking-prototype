@@ -80,7 +80,7 @@ public class NetworkPosition : NetworkState
             var cmd = net_actor.owner.cmd_queue.Peek();
             last_cmd_id = cmd.commandid;
 			rigidbody.MoveRotation(rigidbody.rotation * UserInput.KeyStateToRotation(cmd.keystate));
-			Vector3 pos = transform.TransformPoint(UserInput.KeyStateToVelocity(cmd.keystate));
+			Vector3 pos = rigidbody.position + (rigidbody.rotation * UserInput.KeyStateToVelocity(cmd.keystate));
 			pos.y = 1.0f;
 			rigidbody.MovePosition(pos);
         }
